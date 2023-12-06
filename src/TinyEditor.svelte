@@ -49,9 +49,14 @@
     const getCorrectQuoteChar = (prev, next) => {
       const START_OF_PARAGRAPH = ''
       const SPACE = ' '
+
       if ([START_OF_PARAGRAPH, SPACE, CLOSING_QUOTE].includes(prev))
         return OPENING_QUOTE
-      console.log('vai retornar CLOSING_QUOTE')
+      const prevCode = prev.charCodeAt(0)
+      if (prevCode == 160)
+        return OPENING_QUOTE
+
+        console.log('vai retornar CLOSING_QUOTE')
       if ([',', '.', ';', '!', '?'].includes(next))
         return CLOSING_QUOTE 
       return CLOSING_QUOTE
