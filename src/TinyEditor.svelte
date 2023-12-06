@@ -29,7 +29,7 @@
     const OPENING_QUOTE = '“'
     const CLOSING_QUOTE = '”'
 
-    console.log('keydown')
+  //  console.log('keydown')
   //  console.log(e)
     const editor = e.detail.editor
     const selection = editor.selection
@@ -38,14 +38,15 @@
     const sel = selection.getSel()
     console.log('sel')
     console.log(sel)
-    const { textContent, baseOffset } = sel.baseNode
-    const prevChar = textContent.charAt(sel.baseOffset-1)
-    const nextChar = textContent.charAt(sel.baseOffset)
+    const textContent = sel.baseNode.textContent
+    const baseOffset = sel.baseOffset
+    const prevChar = textContent.charAt(baseOffset-1)
+    const nextChar = textContent.charAt(baseOffset)
 
     console.log(textContent)
-    console.log(baseOffset)
-    console.log('previous char =', prevChar, 'next char =', nextChar)
-    
+    console.log('baseOffset = ', baseOffset, 'previous char =', prevChar, 'next char =', nextChar)
+
+
     const getCorrectQuoteChar = (prev, next) => {
       const START_OF_PARAGRAPH = ''
       const SPACE = ' '
@@ -53,10 +54,11 @@
       if ([START_OF_PARAGRAPH, SPACE, CLOSING_QUOTE].includes(prev))
         return OPENING_QUOTE
       const prevCode = prev.charCodeAt(0)
+      console.log(`prevCode = ${prevCode}`)
       if (prevCode == 160)
         return OPENING_QUOTE
 
-        console.log('vai retornar CLOSING_QUOTE')
+      console.log('vai retornar CLOSING_QUOTE')
       if ([',', '.', ';', '!', '?'].includes(next))
         return CLOSING_QUOTE 
       return CLOSING_QUOTE
@@ -64,6 +66,7 @@
 
     const nativeEvent = e.detail.event
     const key = nativeEvent.key
+    console.log(`key = ${key}`)
 
     if (key === '"') {
       console.log('SMART QUOTES')
