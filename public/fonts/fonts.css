@@ -1,0 +1,145 @@
+/* iAWriter Mono */
+
+@font-face {
+  font-family: 'iA Writer Mono';
+  font-style: normal;
+  font-weight: 450;
+  font-display: swap;
+  
+  src: url('/fonts/iAWriterMonoS-Regular.woff2');
+}
+
+@font-face {
+  font-family: 'iA Writer Mono';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('iAWriterMonoS-Italic.woff2');
+}
+
+@font-face {
+  font-family: 'iA Writer Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('iAWriterMonoS-Bold.woff2');
+}
+
+@font-face {
+  font-family: 'iA Writer Mono';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('iAWriterMonoS-BoldItalic.woff2');
+}
+
+/* Source Serif Pro */
+
+@font-face {
+  font-family: 'Source Serif Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  
+  src: url('SourceSerifPro-Regular.otf.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Source Serif Pro';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  
+  src: url('SourceSerifPro-It.otf.woff2');
+}
+
+@font-face {
+  font-family: 'Source Serif Pro';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  
+  src: url('SourceSerifPro-Bold.otf.woff2');
+}
+
+@font-face {
+  font-family: 'Source Serif Pro';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  
+  src: url('SourceSerifPro-BoldIt.otf.woff2');
+}
+
+/* Inter */
+
+@font-face {
+  font-family: 'Inter';
+  font-style:  normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("Inter-Regular.woff2?v=3.18") format("woff2"),
+       url("Inter-Regular.woff?v=3.18") format("woff");
+}
+@font-face {
+  font-family: 'Inter';
+  font-style:  italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("Inter-Italic.woff2?v=3.18") format("woff2"),
+       url("Inter-Italic.woff?v=3.18") format("woff");
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style:  normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("Inter-Medium.woff2?v=3.18") format("woff2"),
+       url("Inter-Medium.woff?v=3.18") format("woff");
+}
+@font-face {
+  font-family: 'Inter';
+  font-style:  italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("Inter-MediumItalic.woff2?v=3.18") format("woff2"),
+       url("Inter-MediumItalic.woff?v=3.18") format("woff");
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style:  normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("Inter-SemiBold.woff2?v=3.18") format("woff2"),
+       url("Inter-SemiBold.woff?v=3.18") format("woff");
+}
+@font-face {
+  font-family: 'Inter';
+  font-style:  italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url("Inter-SemiBoldItalic.woff2?v=3.18") format("woff2"),
+       url("Inter-SemiBoldItalic.woff?v=3.18") format("woff");
+}
+
+/* Note que usamos a mesma fonte para os weights 600 e 700! */
+
+@font-face {
+  font-family: 'Inter';
+  font-style:  normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("Inter-SemiBold.woff2?v=3.18") format("woff2"),
+       url("Inter-SemiBold.woff?v=3.18") format("woff");
+}
+@font-face {
+  font-family: 'Inter';
+  font-style:  italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("Inter-SemiBoldItalic.woff2?v=3.18") format("woff2"),
+       url("Inter-SemiBoldItalic.woff?v=3.18") format("woff");
+}
+
