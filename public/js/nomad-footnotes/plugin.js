@@ -1,4 +1,4 @@
-tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
+tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     /**
      * Remove a footnote link using its HREF - i.e., the footnote it's linking to.
      * @param {string} reference 
@@ -133,18 +133,19 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
                     if (list == null) {
                         var footnoteLink = createFootnoteLink(data.footnoteContent)
                         editor.selection.setNode(footnoteLink);
-                        setupObserver(footnoteLink)
 
+                        var newFootnoteDiv = editor.dom.create('div', { id: 'footnotes', class: 'mceNonEditable' });
+                        var newFootnoteTitle = editor.dom.create('h2', { id: 'footnote-header', class: 'mceNonEditable' }, 'Footnotes');
                         var newList = editor.dom.create('ol', { id: 'footnote-list', class: 'mceNonEditable' });
                         var newItem = editor.dom.create('li', { id: 'footnote-1', class: 'mceEditable' }, data.footnoteContent);
                         var returnLink = editor.dom.create('a', { class: 'footnote-return-link', href: '#footnote-ref-1', 'aria-label': 'Back to content' }, '&crarr;');
 
                         newItem.append(returnLink);
                         newList.append(newItem);
+                        newFootnoteDiv.append(newFootnoteTitle);
+                        newFootnoteDiv.append(newList);
 
-                        editor.dom.add(editor.getBody(), 'p', { class: 'mceNonEditable' }, 'Hello non-editable');
-                        editor.dom.add(editor.getBody(), 'h2', { id: 'footnote-header', class: 'mceNonEditable' }, 'Footnotes');
-                        editor.dom.add(editor.getBody(), newList);
+                        editor.dom.add(editor.getBody(), newFootnoteDiv);
                     }
                     // If a list of footnotes already exists, add to it
                     else {
@@ -152,7 +153,6 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
                         // var footnoteLink = editor.dom.create('a', { id: 'footnote-ref-x', class: 'mceNonEditable', href: '#footnote-x', 'aria-describedby': 'footnote-header' }, '[X]');
                         var footnoteLink = createFootnoteLink(data.footnoteContent, 'x')                        
                         editor.selection.setNode(footnoteLink);
-                        setupObserver(footnoteLink)
 
                         var footnoteLinkCount = 1;
                         var footnoteListCount = 1;
@@ -311,18 +311,3 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
     };
 });
 
-function setupObserver (element, callback=stdCallback) {
-  let observer = new MutationObserver(callback);
-  observer.observe(element, { attributes: true, childList: true, characterData: true });
-}
-
-function stdCallback (mutationList, observer) {
-    console.warn('mutation callback!')
-    for (const mutation of mutationList) {
-        if (mutation.type === "childList") {
-            console.log("A child node has been added or removed.");
-        } else if (mutation.type === "attributes") {
-            console.log(`The ${mutation.attributeName} attribute was modified.`);
-        }
-    }
-}

@@ -6,16 +6,15 @@
   const conf = {
     extended_valid_elements: "+@[data-*]",
     external_plugins: {
-      pluginId: '/js/footnotes-traditional/plugin.js'
+      pluginId: '/js/nomad-footnotes/plugin.js'
     },
-    plugins: ' footnotes-traditional link code lists advlist table nonbreaking paste searchreplace spellchecker charmap fullscreen pagebreak wordcount',
+    plugins: 'nomad-footnotes link code lists advlist table nonbreaking paste searchreplace spellchecker charmap fullscreen pagebreak wordcount',
     toolbar: 'blocks fontfamily fontsize h1 code bold italic copy cut paste accordion accordiontoggle accordionremove visualblocks visualchars footnotes-traditional',
     noneditable_class: 'mceNonEditable',
     editable_class: 'mceEditable',    
     setup: function (editor) {
       console.log('SETUP')
       editor.on('init', function(e) {
-        console.log('INIT')
         // UNCOMMENT THIS TO SET THE EDITOR IN FULLSCREEN MODE!!
         editor.execCommand('mceFullScreen')
         const bodyElement = editor.dom.getRoot()    
