@@ -12,8 +12,6 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
         }
     };
 
-    console.warn('entrou no footnotes-traditional')
-
     /**
      * Remove a footnote and the link to it. The applicable footnote is chosen by placement of teh caret.
      * 
@@ -55,6 +53,37 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
         });
     };
 
+    const showFootnoteDialog = ({ title="New footnote", content='', onSubmit }) => {
+        return editor.windowManager.open({
+            title,
+            body: {
+                type: 'panel',
+                items: [{
+                    type: 'textarea',
+                    name: 'footnoteContent',
+                    multiline: true,
+                    minWidth: 520,
+                    minHeight: 100,
+                }]
+            },
+            buttons: [{
+                type: 'cancel',
+                text: 'Close'
+            },
+            {
+                type: 'submit',
+                text: 'Save',
+                primary: true
+            }],  
+            initialData: {
+                footnoteContent: content,
+            },    
+            onSubmit
+        })
+
+    }
+
+
     /**
      * Insert a footnote at the caret position. Opens a dialog first for the user to write the footnote content.
      * @returns nothing
@@ -84,30 +113,46 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
             ],
             onSubmit: function(api) {
                 var data = api.getData();
+               
+                const createFootnoteLink = (content, number=1) => {
+                    return editor.dom.create('a', { 
+                        id: `footnote-ref-${number}`, 
+                        class: 'nw-footnote mceNonEditable', 
+                        style: 'vertical-align: super; line-height: 1.0; font-size: 0.83em;',  // superscript 
+                        href: `#footnote-${number}`, 
+                        'data-footnote-content': btoa(data.footnoteContent),  // base64
+                        'aria-describedby': 'footnote-header',
+                        title: data.footnoteContent,
+                    }, `[${number}]`);
+                }
 
                 editor.undoManager.transact(function() {
                     var list = editor.dom.get('footnote-list');
 
                     // If there isn't an existing list of footnotes, create one
                     if (list == null) {
-                        var footnoteLink = editor.dom.create('a', { id: 'footnote-ref-1', href: '#footnote-1', 'aria-describedby': 'footnote-header' }, '[1]');
+                        var footnoteLink = createFootnoteLink(data.footnoteContent)
                         editor.selection.setNode(footnoteLink);
+                        setupObserver(footnoteLink)
 
-                        var newList = editor.dom.create('ol', { id: 'footnote-list' });
-                        var newItem = editor.dom.create('li', { id: 'footnote-1' }, data.footnoteContent);
+                        var newList = editor.dom.create('ol', { id: 'footnote-list', class: 'mceNonEditable' });
+                        var newItem = editor.dom.create('li', { id: 'footnote-1', class: 'mceEditable' }, data.footnoteContent);
                         var returnLink = editor.dom.create('a', { class: 'footnote-return-link', href: '#footnote-ref-1', 'aria-label': 'Back to content' }, '&crarr;');
 
                         newItem.append(returnLink);
                         newList.append(newItem);
 
-                        editor.dom.add(editor.getBody(), 'h2', { id: 'footnote-header' }, 'Footnotes');
+                        editor.dom.add(editor.getBody(), 'p', { class: 'mceNonEditable' }, 'Hello non-editable');
+                        editor.dom.add(editor.getBody(), 'h2', { id: 'footnote-header', class: 'mceNonEditable' }, 'Footnotes');
                         editor.dom.add(editor.getBody(), newList);
                     }
                     // If a list of footnotes already exists, add to it
                     else {
                         // Insert the footnote link
-                        var footnoteLink = editor.dom.create('a', { id: 'footnote-ref-x', href: '#footnote-x', 'aria-describedby': 'footnote-header' }, '[X]');
+                        // var footnoteLink = editor.dom.create('a', { id: 'footnote-ref-x', class: 'mceNonEditable', href: '#footnote-x', 'aria-describedby': 'footnote-header' }, '[X]');
+                        var footnoteLink = createFootnoteLink(data.footnoteContent, 'x')                        
                         editor.selection.setNode(footnoteLink);
+                        setupObserver(footnoteLink)
 
                         var footnoteLinkCount = 1;
                         var footnoteListCount = 1;
@@ -168,6 +213,25 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
             }
         });
     };
+
+    /*** Click events on the footnotes ***/
+
+    editor.on('click', (e) => {
+        if (e.target.classList.contains('nw-footnote'))
+          console.warn('Clicou numa footnote!')
+    });
+
+    editor.on('dblclick', (e) => {
+        if (!e.target.classList.contains('nw-footnote'))
+          return
+        console.error('Dblclick numa footnote!')
+
+        showFootnoteDialog({
+            title: 'Footnote',
+            content: atob(e.target.getAttribute('data-footnote-content')),
+            onSubmit: () => alert('ok')
+        })
+    });
 
     /*** Icons ***/
     editor.ui.registry.addIcon('footnote-add', '<svg height="24" width="24" clip-rule="evenodd" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="1.5" version="1.1" viewBox="0 0 24 24" xml:space="preserve" xmlns="http://www.w3.org/2000/svg"><path d="m16.661 5.497-4.073-2.948h-10.339v18.578h14.412v-15.63z" fill="none" stroke="#000" stroke-width="1.5px"/><path d="m11.361 2.718v4.012h5.014" fill="none" stroke="#000" stroke-width="1.5px"/><path d="m5.328 11.199h4.95" fill="none" stroke="#000" stroke-width="1px"/><path d="m5.328 13.244h7.978" fill="none" stroke="#000" stroke-width="1px"/><rect x="5.303" y="15.674" width="8.074" height="2.625" fill="none" stroke="#000" stroke-width="1px"/><path d="m12.498 10.72h0.53" fill="none" stroke="#000" stroke-width="1px"/><path d="m20.041 9.331h2.331v8.499h-2.331" fill="none" stroke="#000" stroke-width="1.5px"/><path d="m19.769 16.719-0.71 0.984 0.655 1.08" fill="none" stroke="#000" stroke-width="1px"/></svg>');
@@ -241,3 +305,19 @@ tinymce.PluginManager.add('footnotes-traditional', function(editor, url) {
         }
     };
 });
+
+function setupObserver (element, callback=stdCallback) {
+  let observer = new MutationObserver(callback);
+  observer.observe(element, { attributes: true, childList: true, characterData: true });
+}
+
+function stdCallback (mutationList, observer) {
+    console.warn('mutation callback!')
+    for (const mutation of mutationList) {
+        if (mutation.type === "childList") {
+            console.log("A child node has been added or removed.");
+        } else if (mutation.type === "attributes") {
+            console.log(`The ${mutation.attributeName} attribute was modified.`);
+        }
+    }
+}

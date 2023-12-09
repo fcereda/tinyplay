@@ -4,12 +4,130 @@
   let editorId
   let editorContent = '<p style="font-family:serif;">"Hello <i>World</i></p>'
   const conf = {
+    extended_valid_elements: "+@[data-*]",
     external_plugins: {
       pluginId: '/js/footnotes-traditional/plugin.js'
     },
     plugins: ' footnotes-traditional link code lists advlist table nonbreaking paste searchreplace spellchecker charmap fullscreen pagebreak wordcount',
     toolbar: 'blocks fontfamily fontsize h1 code bold italic copy cut paste accordion accordiontoggle accordionremove visualblocks visualchars footnotes-traditional',
+    noneditable_class: 'mceNonEditable',
+    editable_class: 'mceEditable',    
+    setup: function (editor) {
+      console.log('SETUP')
+      editor.on('init', function(e) {
+        console.log('INIT')
+        // UNCOMMENT THIS TO SET THE EDITOR IN FULLSCREEN MODE!!
+        editor.execCommand('mceFullScreen')
+        const bodyElement = editor.dom.getRoot()    
+        setupObservers(bodyElement, altCallback(bodyElement))
+      })
+    }    
   }
+
+  function setupObservers (bodyElement, callback) {
+    var listObserver = new MutationObserver(callback);
+    listObserver.observe(bodyElement, { childList: true, subtree: true });
+  }
+
+  function stdCallback (mutationList, observer) {
+    console.warn('mutation callback!')
+    for (const mutation of mutationList) {
+        if (mutation.type === "childList") {
+            console.log("A child node has been added or removed.");
+            checkFootnoteElements(bodyElement)
+            checkNodeMutation(mutation)
+        } else if (mutation.type === "attributes") {
+            console.log(`The ${mutation.attributeName} attribute was modified.`);
+        }
+    }
+  }
+
+  function altCallback (bodyElement) {
+    return (mutationList) => {
+      for (const mutation of mutationList) {
+        if (mutation.type === "childList") {
+            console.log("A child node has been added or removed.");
+            checkFootnoteElements(bodyElement)
+        } 
+      }
+    }  
+  }
+
+  function checkNodeMutation (mutation) {
+    const removedNodes = mutation.removedNodes
+    const checkNodeList = (nodelist) => {
+      for (let i = 0; i < nodelist.length; i++) {
+        const node = nodelist[i]
+        console.log(node.nodeValue)
+        //const attrib = Element.prototype.getAttribute.call(node, 'aria-describedby')
+        return false
+        const getAttribute = Element.prototype.getAttribute.bind(node)
+        const attrib = getAttribute('aria-describedby')
+        if (attrib) {
+        // if (node.getAttribute('aria-describedby')) {
+          console.log('A footnote was deleted!')
+          return true
+        }
+        if (node.hasChildNodes()) 
+          return checkNodeList(node.childNodes)
+      }
+      return false  
+    }
+
+    console.log(removedNodes)
+    if (!checkNodeList(removedNodes))
+      console.log('Não encontrou footnotes nos nodes removidos')
+  }
+
+
+  function checkNodeMutation0 (mutation) {
+    const removedNodes = mutation.removedNodes
+     console.log(removedNodes)
+    for (let i = 0; i < removedNodes.length; i++) {
+      const node = removedNodes[i]
+      if (node.querySelectorAll('[aria-describedby="footnote-header"]').length) {
+        console.warn('A footnote was deleted!!')
+        return
+      }
+    }
+  }
+
+  let numFootnoteElements = 0
+  let footnoteCollection = null
+  
+  function checkFootnoteElements (bodyElement) {
+    if (!footnoteCollection) {
+      // footnoteCollection = bodyElement.querySelectorAll('[aria-describedby="footnote-header"]')
+      footnoteCollection = bodyElement.getElementsByClassName('mceNonEditable')
+    }  
+    console.log(`footnoteCollection.length = ${footnoteCollection.length}`)
+    if (footnoteCollection.length < numFootnoteElements) {
+      console.warn('*** A footnote was removed!')
+    } 
+    else if (footnoteCollection.length > numFootnoteElements) {
+      console.log('*** A footnote was added!!')
+    }
+    numFootnoteElements = footnoteCollection.length
+  }
+
+
+
+
+  function handleMutation (mutationList, observer) {
+    console.log(mutationList)
+    for (let i = 0; i < mutationList.length; i++) {
+      const removedNodes = mutationList[i].removedNodes
+      for (let j = 0; j < removedNodes.length; j++) {
+        const node = removedNodes[j]
+        if (node.classList.contains('mceNonEditable')) {
+          console.warn('Algo foi removido!')
+          return
+          console.log('node removed: ', node.id)
+        }
+      }
+    }
+  }
+
 
   function handleChange (e) {
     console.log('change event')
@@ -17,6 +135,7 @@
   }
 
   function handleNodeChange (e) {
+    console.log(e)
     return
     console.log('NodeChange')
     console.log(e)
@@ -104,7 +223,6 @@
     }
     return null
   }
-
 
 </script>
 
