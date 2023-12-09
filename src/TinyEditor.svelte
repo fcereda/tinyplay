@@ -3,7 +3,13 @@
 
   let editorId
   let editorContent = '<p style="font-family:serif;">"Hello <i>World</i></p>'
-  const conf = {}
+  const conf = {
+    external_plugins: {
+      pluginId: '/js/footnotes-traditional/plugin.js'
+    },
+    plugins: ' footnotes-traditional link code lists advlist table nonbreaking paste searchreplace spellchecker charmap fullscreen pagebreak wordcount',
+    toolbar: 'blocks fontfamily fontsize h1 code bold italic copy cut paste accordion accordiontoggle accordionremove visualblocks visualchars footnotes-traditional',
+  }
 
   function handleChange (e) {
     console.log('change event')
@@ -26,18 +32,14 @@
   }
 
   function handleKeydown (e) {
-    const OPENING_QUOTE = '“'
-    const CLOSING_QUOTE = '”'
-
-  //  console.log('keydown')
-  //  console.log(e)
+    const OPENING_DOUBLE_QUOTE = '“'
+    const CLOSING_DOUBLE_QUOTE = '”'
+    const OPENING_SINGLE_QUOTE = '‘'  
+	  const CLOSING_SINGLE_QUOTE = '’'	
+	
     const editor = e.detail.editor
     const selection = editor.selection
-  //  console.log(selection.getNode())
-  //  console.log(selection.getSel())
     const sel = selection.getSel()
-    console.log('sel')
-    console.log(sel)
     const textContent = sel.baseNode.textContent
     const baseOffset = sel.baseOffset
     const prevChar = textContent.charAt(baseOffset-1)
@@ -46,57 +48,51 @@
     console.log(textContent)
     console.log('baseOffset = ', baseOffset, 'previous char =', prevChar, 'next char =', nextChar)
 
-
-    const getCorrectQuoteChar = (prev, next) => {
+    const getCorrectQuoteChar = (key, prev, next) => {
       const START_OF_PARAGRAPH = ''
       const SPACE = ' '
+      let openingQuote = OPENING_DOUBLE_QUOTE
+      let closingQuote = CLOSING_DOUBLE_QUOTE
+      if (key === "'") {
+        openingQuote = OPENING_SINGLE_QUOTE
+        closingQuote = CLOSING_SINGLE_QUOTE
+      }	  
 
-      if ([START_OF_PARAGRAPH, SPACE, CLOSING_QUOTE].includes(prev))
-        return OPENING_QUOTE
+      if ([START_OF_PARAGRAPH, SPACE, CLOSING_DOUBLE_QUOTE, CLOSING_SINGLE_QUOTE].includes(prev))
+        return openingQuote
       const prevCode = prev.charCodeAt(0)
       console.log(`prevCode = ${prevCode}`)
       if (prevCode == 160)
-        return OPENING_QUOTE
+        return openingQuote
 
-      console.log('vai retornar CLOSING_QUOTE')
+        console.log('vai retornar CLOSING_QUOTE')
       if ([',', '.', ';', '!', '?'].includes(next))
-        return CLOSING_QUOTE 
-      return CLOSING_QUOTE
+        return closingQuote 
+      return closingQuote
     }
 
     const nativeEvent = e.detail.event
     const key = nativeEvent.key
-    console.log(`key = ${key}`)
+	  const ctrlKey = nativeEvent.ctrlKey
+    console.log(`key = ${key}, ctrlKey = ${ctrlKey}`)
 
-    if (key === '"') {
-      console.log('SMART QUOTES')
-      const correctQuote = getCorrectQuoteChar(prevChar, nextChar)
+    if (key === '"' || key == "'") {
       nativeEvent.preventDefault()
       nativeEvent.stopPropagation()
-      editor.selection.setContent(correctQuote)
+      if (!ctrlKey) {
+      console.log('SMART QUOTES')
+          const correctQuote = getCorrectQuoteChar(key, prevChar, nextChar)
+          editor.selection.setContent(correctQuote)
+      } 
+      else {
+        editor.selection.setContent(key)
+      }	  
       return
     }  
 
     return
+  } 
 
-    const blockNode = getBlockNode(sel.baseNode)
-    console.log(blockNode.textContent)
-    //blockNode.textContent = blockNode.textContent.replace(/o/g, 'O')
-    selection.setCursorLocation(sel.baseNode, sel.baseOffset)
-
-    //console.log(key)
-    if (key === '"') {
-      console.warn(textContent)
-      console.warn(textContent.charAt(sel.baseOffset - 1), 
-        textContent.charAt(sel.baseOffset + 1))
-      nativeEvent.preventDefault()
-      nativeEvent.stopPropagation()
-      editor.selection.setContent(`“`)
-
-      // opening quote: “
-      // closing quote: ”
-    }
-  }    
   
   function getBlockNode (node) {
     const blockNodes = ['P', 'TR', 'TD', 'TH', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']
