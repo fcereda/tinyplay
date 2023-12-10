@@ -1,8 +1,9 @@
 <script>
   import Editor from '@tinymce/tinymce-svelte';
+  import { content } from './content.js'
 
   let editorId
-  let editorContent = '<p style="font-family:serif;">"Hello <i>World</i></p>'
+  let editorContent = content;  //'<p style="font-family:serif;">"Hello <i>World</i></p>'
   const conf = {
     extended_valid_elements: "+@[data-*]",
     external_plugins: {
@@ -17,6 +18,7 @@
       editor.on('init', function(e) {
         // UNCOMMENT THIS TO SET THE EDITOR IN FULLSCREEN MODE!!
         editor.execCommand('mceFullScreen')
+        return
         const bodyElement = editor.dom.getRoot()    
         setupObservers(bodyElement, altCallback(bodyElement))
       })
@@ -134,7 +136,6 @@
   }
 
   function handleNodeChange (e) {
-    console.log(e)
     return
     console.log('NodeChange')
     console.log(e)
