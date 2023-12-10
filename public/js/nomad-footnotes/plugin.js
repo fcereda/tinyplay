@@ -13,6 +13,59 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         }
     }
 
+    const createFootnotesContainer = function (populate=false) {
+        const newDiv = editor.dom.create('div', {
+            id: 'footnotes-container',
+            class: 'nw-footnotes-container',
+            style: 'margin-top: 2em; outline:none;',
+            contenteditable: 'false'
+        }, '<hr />')
+        const newList = editor.dom.create('ol', {
+            id: 'footnotes-list',
+            class: 'nw-footnotes-list',
+            style: 'font-size:0.9em; margin-top: -0.25em;',
+            contenteditable: 'false'
+        })
+        newDiv.append(newList)
+        if (populate && footnotesList) {
+            for (let i = 0; i < footnotesList.length; i++) {
+                const footnote = footnotesList[i] 
+                const content = atob(footnote.getAttribute('data-footnote-content'))
+                const newListItem = editor.dom.create('li', {
+                    id: `footnote-${i+1}`,
+                    class: 'nw-footnote-content',
+                    style: 'margin-bottom: 0.5em;',
+                    contenteditable: 'true'
+                }, content)
+                newListItem.addEventListener('blur', e => {
+                    // console.log('blur from', e.target.innerText)
+                    footnote.setAttribute('data-footnote-content', btoa(e.target.innerHTML))
+                    footnote.setAttribute('title', e.target.innerText)
+                })
+                newList.append(newListItem)
+            }
+        }
+        newDiv.addEventListener('blur', (e) => {
+            console.log('blur from footnotes container')
+            console.log(e.target)
+        }, true /* capture */)
+        editor.dom.add(editor.getBody(), newDiv);
+        return newDiv
+    }
+
+    const updateFootnotesContainer = function () {
+        try {
+            const bodyElement = editor.getBody()
+            const footnotesContainers = bodyElement.getElementsByClassName('nw-footnotes-container')
+            for (let i = 0; i < footnotesContainers.length; i++) {
+              footnotesContainers[i].remove()
+            }  
+            createFootnotesContainer(true)
+        } catch (err) {
+            console.error('Unable to update footnotes:', err )
+        }           
+    }
+
     const showFootnoteDialog = ({ title="New footnote", content='', onSubmit }) => {
         return editor.windowManager.open({
             title,
@@ -68,6 +121,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                     var footnoteLink = createFootnoteLink(data.footnoteContent)
                     editor.selection.setNode(footnoteLink);
                     renumberFootnotes(); 
+                    updateFootnotesContainer()                    
                 });
 
                 api.close();

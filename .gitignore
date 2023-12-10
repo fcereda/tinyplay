@@ -1,4 +1,4 @@
 /node_modules/
 /public/build/
-
+/public/js/old-footnotes
 .DS_Store

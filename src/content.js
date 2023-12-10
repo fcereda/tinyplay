@@ -29,6 +29,8 @@ const content = `<h1 class="page">Filtering TinyMCE content</h1>
 </div>
 </div>
 </div>
+
+<!--
 <div contenteditable="false" style="outline:none">
   <h2>Non-editable div</h2>
   <p>Hello this paragraph should not be editable</p>
@@ -53,6 +55,7 @@ const content = `<h1 class="page">Filtering TinyMCE content</h1>
     <tr><td>2.</td><td contenteditable="true">Second footnote.</td></tr>
   </tbody>
 </table>
+-->
 `
 
 export { content }
