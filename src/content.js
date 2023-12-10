@@ -28,6 +28,31 @@ const content = `<h1 class="page">Filtering TinyMCE content</h1>
 </div>
 </div>
 </div>
-</div>`
+</div>
+<div contenteditable="false" style="outline:none">
+  <h2>Non-editable div</h2>
+  <p>Hello this paragraph should not be editable</p>
+  <div contenteditable="true"><span contenteditable="false" style="transform: translateX(-1px)">2&nbsp;</span>This one can be edited. Enjoy!</div>
+</div>  
+
+<div contenteditable="false" style="outline:none">
+  <hr />
+  <ol style="font-size:0.9em; margin-top: -0.25em">
+    <li contenteditable="true" style="margin-bottom: 0.5em">Note 1</li>
+    <li contenteditable="true" style="margin-bottom: 0.5em">Hello this paragraph should not be editable</li>
+    <li contenteditable="true" style="margin-bottom: 0.5em">This one can be edited too. Enjoy!</li>
+  </ol>  
+</div>
+
+<br /><br />
+
+<table contenteditable="false">
+  <tbody contenteditable="false">
+    <tr><td colspan="2">Footnotes</td></tr>
+    <tr><td>1.</td><td contenteditable="true">First footnote.</td></tr>
+    <tr><td>2.</td><td contenteditable="true">Second footnote.</td></tr>
+  </tbody>
+</table>
+`
 
 export { content }
