@@ -57,7 +57,9 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     }
 
     const createFootnotesContainer = function (populate=false) {
-        console.time('create-footnotes-container')
+        if (!footnotesList?.length)
+          return
+        console.time('create-footnotes-container')        
         const newDiv = editor.dom.create('div', {
             id: 'footnotes-container',
             class: 'nw-footnotes-container',
