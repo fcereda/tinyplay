@@ -3,23 +3,70 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     /** Live list of all footnotes */
     let footnotesList
     
-    const renumberFootnotes = function () {
+  
+    const isBogusElement = element => Boolean(element.parentElement.getAttribute('data-mce-bogus'))
+
+    const renumberFootnotes0 = function () {
+        console.log(`entrou em renumberfootnotes`)
         if (!footnotesList) {
             footnotesList = editor.getBody().getElementsByClassName('nw-footnote')
         }
         for (let i = 0; i < footnotesList.length; i++) {
+            console.log(footnotesList[i].parentElement)
+            if (isBogusElement(footnotesList[i])) 
+                break;
             const footnoteNumber = i + 1
+            footnotesList[i].id = `footnote-ref-${footnoteNumber}`
+            footnotesList[i].href = `#footnote-${footnoteNumber}`
             footnotesList[i].innerText = `(${footnoteNumber})`
         }
     }
 
+    const renumberFootnotes = function () {
+      console.log('entrou em renumberFootnotes2')
+        if (!footnotesList) {
+            footnotesList = editor.getBody().getElementsByClassName('nw-footnote')
+        }
+        const footnotesContents = editor.getBody().getElementsByClassName('nw-footnote-content')
+        let mustUpdateFootnotesContainer = false
+        let numFootnoteRefs = 0
+        for (let i = 0; i < footnotesList.length; i++) {
+            console.log(footnotesList[i].parentElement)
+            if (isBogusElement(footnotesList[i])) {
+              console.log('bogus element found, numrefs =', numFootnoteRefs)  
+              break;
+            }
+                
+
+            const footnoteNumber = i + 1
+            const footnoteRefId = `footnote-ref-${footnoteNumber}`
+            if (footnotesList[i].id != footnoteRefId) {
+              footnotesList[i].id = footnoteRefId
+              footnotesList[i].href = `#footnote-${footnoteNumber}`
+              footnotesList[i].innerText = `(${footnoteNumber})`
+              mustUpdateFootnotesContainer = true
+            } 
+            numFootnoteRefs += 1
+        }
+        if (footnotesContents.length !== numFootnoteRefs) {
+          console.warn('footnotes refs and contents do not match, numrefs =', numFootnoteRefs)
+          mustUpdateFootnotesContainer = true
+        }
+
+        if (mustUpdateFootnotesContainer) {
+          console.warn('mustUpdateFootnotesContainer!!')   
+          updateFootnotesContainer(true)   
+        }
+    }
+
     const createFootnotesContainer = function (populate=false) {
+        console.time('create-footnotes-container')
         const newDiv = editor.dom.create('div', {
             id: 'footnotes-container',
             class: 'nw-footnotes-container',
             style: 'margin-top: 2em; outline:none;',
             contenteditable: 'false'
-        }, '<hr />')
+        }, '<hr style="margin-right: 50%;" />')
         const newList = editor.dom.create('ol', {
             id: 'footnotes-list',
             class: 'nw-footnotes-list',
@@ -30,26 +77,22 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         if (populate && footnotesList) {
             for (let i = 0; i < footnotesList.length; i++) {
                 const footnote = footnotesList[i] 
+                if (isBogusElement(footnote)) 
+                  break
                 const content = atob(footnote.getAttribute('data-footnote-content'))
+                const footnoteId = i + 1
                 const newListItem = editor.dom.create('li', {
-                    id: `footnote-${i+1}`,
+                    id: `footnote-${footnoteId}`,
                     class: 'nw-footnote-content',
                     style: 'margin-bottom: 0.5em;',
-                    contenteditable: 'true'
+                    contenteditable: 'true',
+                    'data-footnote-id': footnoteId,
                 }, content)
-                newListItem.addEventListener('blur', e => {
-                    // console.log('blur from', e.target.innerText)
-                    footnote.setAttribute('data-footnote-content', btoa(e.target.innerHTML))
-                    footnote.setAttribute('title', e.target.innerText)
-                })
                 newList.append(newListItem)
             }
         }
-        newDiv.addEventListener('blur', (e) => {
-            console.log('blur from footnotes container')
-            console.log(e.target)
-        }, true /* capture */)
         editor.dom.add(editor.getBody(), newDiv);
+        console.timeEnd('create-footnotes-container')
         return newDiv
     }
 
@@ -103,7 +146,8 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     var addFootnote = function() {
         return showFootnoteDialog({
             onSubmit: function(api) {
-                var data = api.getData();
+                const data = api.getData();
+                const content = data.footnoteContent || ' '
                
                 const createFootnoteLink = (content, number=1) => {
                     return editor.dom.create('a', { 
@@ -111,14 +155,14 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                         class: 'nw-footnote mceNonEditable', 
                         style: 'vertical-align: super; line-height: 1.0; font-size: 0.83em; font-weight: 600; text-decoration: none; cursor: pointer;',  // superscript 
                         href: `#footnote-${number}`, 
-                        'data-footnote-content': btoa(data.footnoteContent),  // base64
+                        'data-footnote-content': btoa(content),  // base64
                         'aria-describedby': 'footnote-header',
-                        title: data.footnoteContent,
-                    }, `[${number}]`);
+                        title: content,
+                    }, `(${number})`);
                 }
 
                 editor.undoManager.transact(function() {
-                    var footnoteLink = createFootnoteLink(data.footnoteContent)
+                    var footnoteLink = createFootnoteLink(content)
                     editor.selection.setNode(footnoteLink);
                     renumberFootnotes(); 
                     updateFootnotesContainer()                    
@@ -127,6 +171,22 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                 api.close();
             }
         })            
+    }
+
+    /*** Footnote contents observers ***/
+
+    function handleFocusout (e) {
+      const element = e.target
+      if (!element.classList.contains('nw-footnote-content'))
+        return
+      const footnoteId = Number(element.getAttribute('data-footnote-id'))
+      if (!footnoteId) {
+        console.error('Error trying to update footnote, id =', footnoteId)
+        return
+      }
+      const footnote = footnotesList[footnoteId - 1]
+      footnote.setAttribute('data-footnote-content', btoa(e.target.innerHTML))
+      footnote.setAttribute('title', e.target.innerText)
     }
 
 
@@ -139,21 +199,25 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
     function altCallback (bodyElement) {
         return (mutationList) => {
+          let mustCheckFootnotes = false 
           for (const mutation of mutationList) {
             if (mutation.type === "childList") {
-                checkFootnoteElements(bodyElement)
+              mustCheckFootnotes = true  
             } 
           }
+          if (mustCheckFootnotes)
+            checkFootnoteElements(bodyElement)
         }  
     }    
 
     let numFootnoteElements = 0
     
     function checkFootnoteElements (bodyElement) {
-      if (!footnotesList) return
-      if (footnotesList.length !== numFootnoteElements) {
-        renumberFootnotes()
-      } 
+      if (!footnotesList) 
+        return
+      if (footnotesList.length === numFootnoteElements) 
+        return
+      renumberFootnotes()
       numFootnoteElements = footnotesList.length
     }    
 
@@ -165,11 +229,34 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         setupObservers(bodyElement, altCallback(bodyElement))
     })
 
+    editor.on('focusout', handleFocusout)
+
     /*** Click events on the footnotes ***/
 
     editor.on('click', (e) => {
-        if (e.target.classList.contains('nw-footnote'))
-          console.warn('Clicou numa footnote!')
+        if (!e.target.classList.contains('nw-footnote'))
+          return
+
+        console.warn('Clicou numa footnote!')
+        const footnoteId = e.target.href.split('#')[1]
+
+        console.log(footnoteId)
+
+        // debugger
+
+const footnoteContents = editor.getBody().getElementsByClassName('nw-footnote-content')
+for (let i = 0; i < footnoteContents.length; i++) {
+  if (footnoteContents[i].id == footnoteId) {
+    console.log('vai focar na footnote', footnoteContents[i])
+    footnoteContents[i].scrollIntoView({ block: 'end', behavior: 'smooth' })
+    // footnoteContents[i].focus()
+
+    e.preventDefault()
+    e.stopPropagation()
+    return
+  }
+}
+
     });
 
     editor.on('dblclick', (e) => {
