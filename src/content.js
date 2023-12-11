@@ -58,4 +58,10 @@ const content = `<h1 class="page">Filtering TinyMCE content</h1>
 -->
 `
 
-export { content }
+const content2 = `
+<p>Hello World</p>
+<p>This is paragraph</p>
+<p>Nomad Writer is coming!
+`
+
+export { content, content2 }
