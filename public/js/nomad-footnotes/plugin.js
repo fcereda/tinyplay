@@ -33,11 +33,8 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         for (let i = 0; i < footnotesList.length; i++) {
             console.log(footnotesList[i].parentElement)
             if (isBogusElement(footnotesList[i])) {
-              console.log('bogus element found, numrefs =', numFootnoteRefs)  
-              break;
+              break
             }
-                
-
             const footnoteNumber = i + 1
             const footnoteRefId = `footnote-ref-${footnoteNumber}`
             if (footnotesList[i].id != footnoteRefId) {
@@ -236,43 +233,23 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     editor.on('click', (e) => {
         if (!e.target.classList.contains('nw-footnote'))
           return
-
-        console.warn('Clicou numa footnote!')
         const footnoteId = e.target.href.split('#')[1]
-
-        console.log(footnoteId)
-
-        // debugger
-
-const footnoteContents = editor.getBody().getElementsByClassName('nw-footnote-content')
-for (let i = 0; i < footnoteContents.length; i++) {
-  if (footnoteContents[i].id == footnoteId) {
-    console.log('vai focar na footnote', footnoteContents[i])
-    footnoteContents[i].scrollIntoView({ block: 'end', behavior: 'smooth' })
-    // footnoteContents[i].focus()
-
-    e.preventDefault()
-    e.stopPropagation()
-    return
-  }
-}
-
+        const footnoteContents = editor.getBody().getElementsByClassName('nw-footnote-content')
+        for (let i = 0; i < footnoteContents.length; i++) {
+            if (footnoteContents[i].id == footnoteId) {
+                const footnoteElement = footnoteContents[i]
+                footnoteElement.scrollIntoView({ block: 'end', behavior: 'smooth' })
+                editor.selection.setCursorLocation(footnoteElement, 0)
+                e.preventDefault()
+                e.stopPropagation()
+                return
+            }
+        }
     });
 
     editor.on('dblclick', (e) => {
-
-const strings = ['Hello World', 'Olá Fábio', 'jestão']
-strings.forEach((str) => {
-  const base64 = stringToBase64(str)
-  const str2 = base64ToString(base64)
-  console.log(str, '=', base64, '=', str2)
-})
-
-
         if (!e.target.classList.contains('nw-footnote'))
           return
-        console.error('Dblclick numa footnote!')
-
         showFootnoteDialog({
             title: 'Footnote',
             content: base64ToString(e.target.getAttribute('data-footnote-content')),
