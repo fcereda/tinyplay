@@ -79,7 +79,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                 const footnote = footnotesList[i] 
                 if (isBogusElement(footnote)) 
                   break
-                const content = atob(footnote.getAttribute('data-footnote-content'))
+                const content = base64ToString(footnote.getAttribute('data-footnote-content'))
                 const footnoteId = i + 1
                 const newListItem = editor.dom.create('li', {
                     id: `footnote-${footnoteId}`,
@@ -155,7 +155,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                         class: 'nw-footnote mceNonEditable', 
                         style: 'vertical-align: super; line-height: 1.0; font-size: 0.83em; font-weight: 600; text-decoration: none; cursor: pointer;',  // superscript 
                         href: `#footnote-${number}`, 
-                        'data-footnote-content': btoa(content),  // base64
+                        'data-footnote-content': stringToBase64(content),  // base64
                         'aria-describedby': 'footnote-header',
                         title: content,
                     }, `(${number})`);
@@ -185,7 +185,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         return
       }
       const footnote = footnotesList[footnoteId - 1]
-      footnote.setAttribute('data-footnote-content', btoa(e.target.innerHTML))
+      footnote.setAttribute('data-footnote-content', stringToBase64(e.target.innerHTML))
       footnote.setAttribute('title', e.target.innerText)
     }
 
@@ -260,16 +260,25 @@ for (let i = 0; i < footnoteContents.length; i++) {
     });
 
     editor.on('dblclick', (e) => {
+
+const strings = ['Hello World', 'Olá Fábio', 'jestão']
+strings.forEach((str) => {
+  const base64 = stringToBase64(str)
+  const str2 = base64ToString(base64)
+  console.log(str, '=', base64, '=', str2)
+})
+
+
         if (!e.target.classList.contains('nw-footnote'))
           return
         console.error('Dblclick numa footnote!')
 
         showFootnoteDialog({
             title: 'Footnote',
-            content: atob(e.target.getAttribute('data-footnote-content')),
+            content: base64ToString(e.target.getAttribute('data-footnote-content')),
             onSubmit: (api) => {
                 const data = api.getData()
-                e.target.setAttribute('data-footnote-content', btoa(data.footnoteContent))
+                e.target.setAttribute('data-footnote-content', stringToBase64(data.footnoteContent))
                 e.target.setAttribute('title', data.footnoteContent)
                 api.close()
             },    
@@ -330,4 +339,16 @@ for (let i = 0; i < footnoteContents.length; i++) {
         }
     };
 });
+
+
+function stringToBase64(s) {      
+    return btoa(unescape(encodeURIComponent(s)));
+}
+
+function base64ToString(s) {      
+    return decodeURIComponent(escape(atob(s)));
+}
+
+
+
 

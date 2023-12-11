@@ -164,6 +164,8 @@
     const prevChar = textContent.charAt(baseOffset-1)
     const nextChar = textContent.charAt(baseOffset)
 
+    console.warn('keydown')
+    console.log(e)
     console.log(textContent)
     console.log('baseOffset = ', baseOffset, 'previous char =', prevChar, 'next char =', nextChar)
 
@@ -209,7 +211,7 @@
       return
     }  
 
-    return
+    return true
   } 
 
   
