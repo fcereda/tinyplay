@@ -11,7 +11,7 @@
       'smart-quotes':    '/js/nomad-plugins/smart-quotes.js'
     },
     plugins: 'link code lists advlist table nonbreaking searchreplace charmap fullscreen pagebreak wordcount',
-    toolbar: 'blocks fontfamily fontsize h1 code bold italic copy cut paste accordion accordiontoggle accordionremove visualblocks visualchars footnotes-traditional',
+    toolbar: 'blocks fontfamily fontsize h1 code bold italic copy cut paste accordion accordiontoggle accordionremove visualblocks visualchars nomad-footnotes',
     noneditable_class: 'mceNonEditable',
     editable_class: 'mceEditable',    
     setup: function (editor) {
