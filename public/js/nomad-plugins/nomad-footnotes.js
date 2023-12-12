@@ -146,7 +146,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         return showFootnoteDialog({
             onSubmit: function(api) {
                 const data = api.getData();
-                const content = data.footnoteContent || ' '
+                const content = '<p>' + (data.footnoteContent || '') + '</p>'
                
                 const createFootnoteLink = (content, number=1) => {
                     return editor.dom.create('a', { 
@@ -188,6 +188,41 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
       footnote.setAttribute('title', e.target.innerText)
     }
 
+    function handleKeydown (e) {
+        const element = e.target
+        if (!element.classList.contains('nw-footnote-content'))
+          return
+        if (e.key == 'Enter') {
+          if (e.ctrlKey) {
+            e.preventDefault()
+            const footnoteId = e.target.id.split('-')[1]
+            gotoFootnoteReference(footnoteId)
+            return false
+          } 
+          e.shiftKey = true
+        }  
+        return true
+    }
+
+    /*** Go-to reference or content based on the footnote id */
+
+    const getFootnoteRef = (footnoteId) => footnotesList[footnoteId - 1]
+    const getFootnoteContent = (footnoteId) => {
+        const footnoteContents = editor.getBody().getElementsByClassName('nw-footnote-content')
+        return footnoteContents[footnoteId - 1]
+    }
+
+    function gotoFootnoteReference (footnoteId) {
+        const footnoteRef = getFootnoteRef(footnoteId)
+        footnoteRef.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        editor.selection.setCursorLocation(footnoteRef.nextSibling || footnoteRef, 0)
+    }
+
+    function gotoFootnoteContent (footnoteId) {
+        const footnoteElement = getFootnoteContent(footnoteId)
+        footnoteElement.scrollIntoView({ block: 'end', behavior: 'smooth' })
+        editor.selection.setCursorLocation(footnoteElement, 0)        
+    }
 
     /*** Mutation Observer ***/
 
@@ -227,27 +262,17 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         bodyElement && console.warn('We have a body!!')
         setupObservers(bodyElement, altCallback(bodyElement))
     })
-
     editor.on('focusout', handleFocusout)
+    editor.on('keydown', handleKeydown)   
 
     /*** Click events on the footnotes ***/
 
     editor.on('click', (e) => {
         if (!e.target.classList.contains('nw-footnote'))
           return
-        const footnoteId = e.target.href.split('#')[1]
-        const footnoteContents = editor.getBody().getElementsByClassName('nw-footnote-content')
-        for (let i = 0; i < footnoteContents.length; i++) {
-            if (footnoteContents[i].id == footnoteId) {
-                const footnoteElement = footnoteContents[i]
-                footnoteElement.scrollIntoView({ block: 'end', behavior: 'smooth' })
-                editor.selection.setCursorLocation(footnoteElement, 0)
-                e.preventDefault()
-                e.stopPropagation()
-                return
-            }
-        }
-    });
+        const footnoteId = e.target.href.split('-')[1]
+        gotoFootnoteContent(footnoteId)
+    })
 
     editor.on('dblclick', (e) => {
         if (!e.target.classList.contains('nw-footnote'))
@@ -262,7 +287,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                 api.close()
             },    
         })
-    });
+    })
 
     /*** Icons ***/
     editor.ui.registry.addIcon('footnote-add', '<svg height="24" width="24" clip-rule="evenodd" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="1.5" version="1.1" viewBox="0 0 24 24" xml:space="preserve" xmlns="http://www.w3.org/2000/svg"><path d="m16.661 5.497-4.073-2.948h-10.339v18.578h14.412v-15.63z" fill="none" stroke="#000" stroke-width="1.5px"/><path d="m11.361 2.718v4.012h5.014" fill="none" stroke="#000" stroke-width="1.5px"/><path d="m5.328 11.199h4.95" fill="none" stroke="#000" stroke-width="1px"/><path d="m5.328 13.244h7.978" fill="none" stroke="#000" stroke-width="1px"/><rect x="5.303" y="15.674" width="8.074" height="2.625" fill="none" stroke="#000" stroke-width="1px"/><path d="m12.498 10.72h0.53" fill="none" stroke="#000" stroke-width="1px"/><path d="m20.041 9.331h2.331v8.499h-2.331" fill="none" stroke="#000" stroke-width="1.5px"/><path d="m19.769 16.719-0.71 0.984 0.655 1.08" fill="none" stroke="#000" stroke-width="1px"/></svg>');
