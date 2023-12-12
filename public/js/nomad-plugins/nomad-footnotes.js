@@ -2,28 +2,13 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
     /** Live list of all footnotes */
     let footnotesList
-    
-  
+ 
+    /** isBogusElement returns true if the element was created by
+     *  TinyMCE during a drag-and-drop operation **/
     const isBogusElement = element => Boolean(element.parentElement.getAttribute('data-mce-bogus'))
 
-    const renumberFootnotes0 = function () {
-        console.log(`entrou em renumberfootnotes`)
-        if (!footnotesList) {
-            footnotesList = editor.getBody().getElementsByClassName('nw-footnote')
-        }
-        for (let i = 0; i < footnotesList.length; i++) {
-            console.log(footnotesList[i].parentElement)
-            if (isBogusElement(footnotesList[i])) 
-                break;
-            const footnoteNumber = i + 1
-            footnotesList[i].id = `footnote-ref-${footnoteNumber}`
-            footnotesList[i].href = `#footnote-${footnoteNumber}`
-            footnotesList[i].innerText = `(${footnoteNumber})`
-        }
-    }
-
     const renumberFootnotes = function () {
-      console.log('entrou em renumberFootnotes2')
+        console.time('renumberFootnotes')
         if (!footnotesList) {
             footnotesList = editor.getBody().getElementsByClassName('nw-footnote')
         }
@@ -31,16 +16,15 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         let mustUpdateFootnotesContainer = false
         let numFootnoteRefs = 0
         for (let i = 0; i < footnotesList.length; i++) {
-            console.log(footnotesList[i].parentElement)
             if (isBogusElement(footnotesList[i])) {
               break
             }
-            const footnoteNumber = i + 1
-            const footnoteRefId = `footnote-ref-${footnoteNumber}`
+            const footnoteId = i + 1
+            const footnoteRefId = `footnote-ref-${footnoteId}`
             if (footnotesList[i].id != footnoteRefId) {
               footnotesList[i].id = footnoteRefId
-              footnotesList[i].href = `#footnote-${footnoteNumber}`
-              footnotesList[i].innerText = `(${footnoteNumber})`
+              footnotesList[i].href = `#footnote-${footnoteId}`
+              footnotesList[i].innerText = `(${footnoteId})`
               mustUpdateFootnotesContainer = true
             } 
             numFootnoteRefs += 1
@@ -49,7 +33,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
           console.warn('footnotes refs and contents do not match, numrefs =', numFootnoteRefs)
           mustUpdateFootnotesContainer = true
         }
-
+        console.timeEnd('renumberFootnotes')
         if (mustUpdateFootnotesContainer) {
           console.warn('mustUpdateFootnotesContainer!!')   
           updateFootnotesContainer(true)   
@@ -195,7 +179,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         if (e.key == 'Enter') {
           if (e.ctrlKey) {
             e.preventDefault()
-            const footnoteId = e.target.id.split('-')[1]
+            const footnoteId = e.target.id.split('-').reverse()[0]
             gotoFootnoteReference(footnoteId)
             return false
           } 
@@ -214,12 +198,16 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
     function gotoFootnoteReference (footnoteId) {
         const footnoteRef = getFootnoteRef(footnoteId)
+        if (!footnoteRef)
+          return 
         footnoteRef.scrollIntoView({ block: 'start', behavior: 'smooth' })
         editor.selection.setCursorLocation(footnoteRef.nextSibling || footnoteRef, 0)
     }
 
     function gotoFootnoteContent (footnoteId) {
         const footnoteElement = getFootnoteContent(footnoteId)
+        if (!footnoteElement) 
+          return
         footnoteElement.scrollIntoView({ block: 'end', behavior: 'smooth' })
         editor.selection.setCursorLocation(footnoteElement, 0)        
     }
@@ -259,18 +247,51 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
     editor.on('init', function(e) {
         const bodyElement = editor.getBody()    
-        bodyElement && console.warn('We have a body!!')
         setupObservers(bodyElement, altCallback(bodyElement))
     })
     editor.on('focusout', handleFocusout)
     editor.on('keydown', handleKeydown)   
+
+    editor.on('SetContent', function (e) {
+        renumberFootnotes()
+    })
+
+    editor.on('GetContent', function (e) {
+        if (e.format != 'html')
+          return
+        console.time('get content')
+        let content = e.content
+        const searchStr = '<div id="footnotes-container"'
+        let index = content.indexOf(searchStr)
+        if (index >= 0)
+          content = content.slice(0, index)
+        e.content = content
+        console.timeEnd('get content')
+    })
+
+/*
+    editor.on('GetContent', function (e) {
+        console.time('get content')
+        console.log('get content')
+        console.log(e)
+        const tempElem = document.createElement('div')
+        tempElem.innerHTML = e.content
+        // debugger
+        const footnoteContainers = tempElem.getElementsByClassName('nw-footnotes-container')
+        for (let i = 0; i < footnoteContainers.length; i++)
+          footnoteContainers[i].remove()
+        e.content = tempElem.innerHTML
+        tempElem.remove()
+        console.timeEnd('get content')
+    })
+ */
 
     /*** Click events on the footnotes ***/
 
     editor.on('click', (e) => {
         if (!e.target.classList.contains('nw-footnote'))
           return
-        const footnoteId = e.target.href.split('-')[1]
+        const footnoteId = e.target.id.split('-').reverse()[0]
         gotoFootnoteContent(footnoteId)
     })
 
@@ -320,11 +341,11 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
 
 function stringToBase64(s) {      
-    return btoa(unescape(encodeURIComponent(s)));
+    return btoa(encodeURIComponent(s))
 }
 
 function base64ToString(s) {      
-    return decodeURIComponent(escape(atob(s)));
+    return decodeURIComponent(atob(s))
 }
 
 

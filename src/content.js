@@ -59,9 +59,9 @@ const content = `<h1 class="page">Filtering TinyMCE content</h1>
 `
 
 const content2 = `
-<p>Hello World</p>
-<p>This is paragraph</p>
-<p>Nomad Writer is coming!
+<p>Hello<a id="footnote-ref-1" class="nw-footnote mceNonEditable" style="vertical-align: super; line-height: 1.0; font-size: 0.83em; font-weight: 600; text-decoration: none; cursor: pointer;" title="&lt;p&gt;This is a footnote&lt;/p&gt;" href="#footnote-1" data-footnote-content="PHA+VGhpcyBpcyBhIGZvb3Rub3RlPC9wPg==" aria-describedby="footnote-header">(1)</a> World</p>
+<p>This is a paragraph<a id="footnote-ref-2" class="nw-footnote mceNonEditable" style="vertical-align: super; line-height: 1.0; font-size: 0.83em; font-weight: 600; text-decoration: none; cursor: pointer;" title="&lt;p&gt;This is the second footnote. Look nice huh?&lt;/p&gt;" href="#footnote-2" data-footnote-content="PHA+VGhpcyBpcyB0aGUgc2Vjb25kIGZvb3Rub3RlLiBMb29rIG5pY2UgaHVoPzwvcD4=" aria-describedby="footnote-header">(2)</a></p>
+<p>This editor is great!</p>
 `
 
 export { content, content2 }

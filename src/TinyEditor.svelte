@@ -3,6 +3,7 @@
   import { content2 } from './content.js'
 
   let editorId
+  let editor
   let editorContent = content2;  //'<p style="font-family:serif;">"Hello <i>World</i></p>'
   const conf = {
     extended_valid_elements: "+@[data-*]",
@@ -14,23 +15,35 @@
     toolbar: 'blocks fontfamily fontsize h1 code bold italic copy cut paste accordion accordiontoggle accordionremove visualblocks visualchars nomad-footnotes',
     noneditable_class: 'mceNonEditable',
     editable_class: 'mceEditable',    
-    setup: function (editor) {
+    setup: function (thisEditor) {
+      editor = thisEditor
       console.log('SETUP')
       editor.on('init', function(e) {
         // UNCOMMENT THIS TO SET THE EDITOR IN FULLSCREEN MODE!!
-        editor.execCommand('mceFullScreen')
+        // editor.execCommand('mceFullScreen')
       })
     }    
   }
+
+  let text
+  let editorElement
+
+  function showEditorContent () {
+    console.log(editor)
+    console.log('Content below should have no footnote segment:')
+    console.log(editor.getContent())
+  } 
 
 </script>
 
 <main>
   <h1>Hello Tiny</h1>
+  <button on:click={showEditorContent}>getContent()</button>
   <Editor 
     inline={false} 
     bind:id={editorId}
+    bind:this={editorElement}
     conf={conf} 
-    value={editorContent}
+    bind:value={editorContent}
   />
 </main>
