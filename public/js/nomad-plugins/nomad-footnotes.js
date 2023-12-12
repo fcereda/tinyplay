@@ -133,7 +133,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                 const content = '<p>' + (data.footnoteContent || '') + '</p>'
                
                 const createFootnoteLink = (content, number=1) => {
-                    return editor.dom.create('a', { 
+                    return editor.dom.create('span', { 
                         id: `footnote-ref-${number}`, 
                         class: 'nw-footnote mceNonEditable', 
                         style: 'vertical-align: super; line-height: 1.0; font-size: 0.83em; font-weight: 600; text-decoration: none; cursor: pointer;',  // superscript 
@@ -141,6 +141,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
                         'data-footnote-content': stringToBase64(content),  // base64
                         'aria-describedby': 'footnote-header',
                         title: content,
+                        tabindex: -1
                     }, `(${number})`);
                 }
 

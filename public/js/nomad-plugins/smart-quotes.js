@@ -60,7 +60,7 @@ tinymce.PluginManager.add('smart-quotes', (editor, url) => {
     function handleKeydown (e) {
       const key = e.key
       const ctrlKey = e.ctrlKey
-      console.log(`key = ${key}, ctrlKey = ${ctrlKey}`)
+      console.log(`key = ${key}, ctrlKey = ${ctrlKey}, shiftKey = ${e.shiftKey}`)
   
       if (key === '"' || key == "'") {
         e.preventDefault()
