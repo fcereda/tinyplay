@@ -242,13 +242,30 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         return
       renumberFootnotes()
       numFootnoteElements = footnotesList.length
-    }    
+    }   
+    
+    function newGetContent (getContent) {
+      // NÃO MUDA MUITO -- getContent() continua sendo chamado a toda hora
+      return (...args) => {
+        console.time('get content')
+        let content = getContent.apply(editor, [...args])
+        if (args[0]?.hideFootnotes) {
+          const searchStr = '<div id="footnotes-container"'
+          let index = content.indexOf(searchStr)
+          if (index >= 0)
+            content = content.slice(0, index)
+        }
+        console.timeEnd('get content')        
+        return content
+      }
+    }
 
     /*** initialization function ***/
 
     editor.on('init', function(e) {
         const bodyElement = editor.getBody()    
         setupObservers(bodyElement, altCallback(bodyElement))
+        editor.getContent = newGetContent(editor.getContent)
     })
     editor.on('focusout', handleFocusout)
     editor.on('keydown', handleKeydown)   
@@ -257,6 +274,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         renumberFootnotes()
     })
 
+/*
     editor.on('GetContent', function (e) {
         if (e.format != 'html')
           return
@@ -269,23 +287,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         e.content = content
         console.timeEnd('get content')
     })
-
-/*
-    editor.on('GetContent', function (e) {
-        console.time('get content')
-        console.log('get content')
-        console.log(e)
-        const tempElem = document.createElement('div')
-        tempElem.innerHTML = e.content
-        // debugger
-        const footnoteContainers = tempElem.getElementsByClassName('nw-footnotes-container')
-        for (let i = 0; i < footnoteContainers.length; i++)
-          footnoteContainers[i].remove()
-        e.content = tempElem.innerHTML
-        tempElem.remove()
-        console.timeEnd('get content')
-    })
- */
+*/
 
     /*** Click events on the footnotes ***/
 

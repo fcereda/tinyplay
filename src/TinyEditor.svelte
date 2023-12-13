@@ -31,7 +31,7 @@
   function showEditorContent () {
     console.log(editor)
     console.log('Content below should have no footnote segment:')
-    console.log(editor.getContent())
+    console.log(editor.getContent({ format: "html", hideFootnotes: true }))
   } 
 
 </script>
