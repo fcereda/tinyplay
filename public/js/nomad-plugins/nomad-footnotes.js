@@ -1,5 +1,7 @@
 tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
+    const ADD_WITH_DIALOG = false
+
     /** Live list of all footnotes */
     let footnotesList
  
@@ -121,40 +123,61 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         })
     }
 
+    const addFootnote = function (footnoteContent) {
+        const content = '<p>' + (footnoteContent || '') + '</p>'
+               
+        const createFootnoteLink = (content, number=1) => {
+            return editor.dom.create('span', { 
+                id: `footnote-ref-${number}`, 
+                class: 'nw-footnote mceNonEditable', 
+                style: 'vertical-align: super; line-height: 1.0; font-size: 0.83em; font-weight: 600; text-decoration: none; cursor: pointer;',  // superscript 
+                href: `#footnote-${number}`, 
+                'data-footnote-content': stringToBase64(content),  
+                'aria-describedby': 'footnote-header',
+                title: content,
+                tabindex: -1,
+                'data-new-footnote': 'true'
+            }, `(${number})`);
+        }
+        
+        editor.undoManager.transact(function() {
+            editor.selection.setNode(createFootnoteLink(content));
+            // Looks like setNode() creates a new node, so it's useless to store
+            // the node created by createFootnoteLink(). Instead, we look for
+            // the element with the 'data-new-footnote' attribute
+            renumberFootnotes(); 
+            updateFootnotesContainer();
+        });
 
+        let newFootnoteRef
+        for (let i = 0; i < footnotesList.length; i++) {
+            if (footnotesList[i].getAttribute('data-new-footnote')) {
+                newFootnoteRef = footnotesList[i]
+                newFootnoteRef.removeAttribute('data-new-footnote')
+                break
+            }
+        }
+        return newFootnoteRef
+    }
+  
     /**
-     * Insert a footnote at the caret position. Opens a dialog first for the user to write the footnote content.
+     * Insert a footnote at the caret position. 
+     * If ADD_WITH_DIALOG is true, opens a dialog first 
+     * for the user to write the footnote content.
      * @returns nothing
      */
-    var addFootnote = function() {
-        return showFootnoteDialog({
-            onSubmit: function(api) {
-                const data = api.getData();
-                const content = '<p>' + (data.footnoteContent || '') + '</p>'
-               
-                const createFootnoteLink = (content, number=1) => {
-                    return editor.dom.create('span', { 
-                        id: `footnote-ref-${number}`, 
-                        class: 'nw-footnote mceNonEditable', 
-                        style: 'vertical-align: super; line-height: 1.0; font-size: 0.83em; font-weight: 600; text-decoration: none; cursor: pointer;',  // superscript 
-                        href: `#footnote-${number}`, 
-                        'data-footnote-content': stringToBase64(content),  // base64
-                        'aria-describedby': 'footnote-header',
-                        title: content,
-                        tabindex: -1
-                    }, `(${number})`);
+    const  handleAddFootnoteClick = function() {
+        if (ADD_WITH_DIALOG) 
+            return showFootnoteDialog({
+                onSubmit: function(api) {
+                    const data = api.getData();
+                    addFootnote(data.footnoteContent)
+                    api.close()   
                 }
-
-                editor.undoManager.transact(function() {
-                    var footnoteLink = createFootnoteLink(content)
-                    editor.selection.setNode(footnoteLink);
-                    renumberFootnotes(); 
-                    updateFootnotesContainer()                    
-                });
-
-                api.close();
-            }
-        })            
+            })            
+        const newFootnoteRef = addFootnote('') 
+        gotoFootnoteContent(getFootnoteId(newFootnoteRef))
+        editor.focus()   // Remember that, when then user clicks a button in the toolbar, focus goes to the toolbar
     }
 
     /*** Footnote contents observers ***/
@@ -191,8 +214,10 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
     /*** Go-to reference or content based on the footnote id */
 
+    const getFootnoteId = (footnoteElement) => footnoteElement.id.split('-').reverse()[0]
     const getFootnoteRef = (footnoteId) => footnotesList[footnoteId - 1]
     const getFootnoteContent = (footnoteId) => {
+        console.log(`getFootnoteContent, id = ${footnoteId}`)
         const footnoteContents = editor.getBody().getElementsByClassName('nw-footnote-content')
         return footnoteContents[footnoteId - 1]
     }
@@ -202,7 +227,17 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         if (!footnoteRef)
           return 
         footnoteRef.scrollIntoView({ block: 'start', behavior: 'smooth' })
-        editor.selection.setCursorLocation(footnoteRef.nextSibling || footnoteRef, 0)
+
+        const nextSibling = footnoteRef.nextSibling
+        if (nextSibling) {
+            editor.selection.setCursorLocation(nextSibling, 0)
+        } else {
+            const prevSibling = footnoteRef.previousSibling
+            if (prevSibling)
+              editor.selection.setCursorLocation(prevSibling, prevSibling.textContent.length)
+            else 
+              editor.selection.setCursorLocation(footnoteRef.parentNode, 0)
+        }
     }
 
     function gotoFootnoteContent (footnoteId) {
@@ -245,7 +280,6 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     }   
     
     function newGetContent (getContent) {
-      // NÃO MUDA MUITO -- getContent() continua sendo chamado a toda hora
       return (...args) => {
         console.time('get content')
         let content = getContent.apply(editor, [...args])
@@ -299,6 +333,8 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     })
 
     editor.on('dblclick', (e) => {
+        if (!ADD_WITH_DIALOG)
+          return
         if (!e.target.classList.contains('nw-footnote'))
           return
         showFootnoteDialog({
@@ -321,7 +357,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         // text: 'Add Footnote',
         icon: 'footnote-add',
         tooltip: 'Add a footnote',
-        onAction: () => addFootnote()
+        onAction: () => handleAddFootnoteClick()
     });
 
     /*** Menu Items ***/
