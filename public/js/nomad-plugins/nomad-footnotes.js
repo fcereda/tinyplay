@@ -297,6 +297,8 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
           let index = content.indexOf(searchStr)
           if (index >= 0)
             content = content.slice(0, index)
+            content = content.replace(/(<(?:a|span).*?nw-footnote.*?)title=".*?"(.*?>)/gm, 
+              (match, seg1, seg2) => seg1 + seg2)
         }
         console.timeEnd('get content')        
         return content
