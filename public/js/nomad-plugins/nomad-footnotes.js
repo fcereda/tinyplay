@@ -42,6 +42,15 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
         }
     }
 
+    const resetFootnoteTitles = function () {
+      for (let i = 0; i < footnotesList.length; i++) {
+        const footnote = footnotesList[i]
+        const content = base64ToString(footnote.getAttribute('data-footnote-content'))
+        const title = content.replace(/(<.*?>)/g, '')
+        footnote.setAttribute('title', title)
+      }
+    }    
+
     const createFootnotesContainer = function (populate=false) {
         if (!footnotesList?.length)
           return
@@ -306,6 +315,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
 
     editor.on('SetContent', function (e) {
         renumberFootnotes()
+        resetFootnoteTitles()
     })
 
 /*
@@ -364,7 +374,7 @@ tinymce.PluginManager.add('nomad-footnotes', function(editor, url) {
     editor.ui.registry.addMenuItem('nomad-footnotes', {
         text: 'Add Footnote',
         icon: 'footnote-add',
-        onAction: () => addFootnote()
+        onAction: () => handleAddFootnoteClick()
     });
 
     // Return the metadata for the plugin
